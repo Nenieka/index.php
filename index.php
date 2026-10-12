@@ -1,87 +1,69 @@
 <?php
-$menu = [
-    1 => ["nama" => "Burger Beef", "harga" => 15000],
-    2 => ["nama" => "Pizza Keju", "harga" => 25000],
-    3 => ["nama" => "Kentang Goreng", "harga" => 10000],
-    4 => ["nama" => "Donat Cokelat", "harga" => 8000],
-    5 => ["nama" => "Es Teh", "harga" => 5000]
+
+$nama_toko = "MaiA Food";
+
+$harga_menu = [
+    "Burger" => 15000,
+    "Pizza" => 25000,
+    "Kentang Goreng" => 10000,
+    "Donat" => 8000,
+    "Es Teh" => 5000
 ];
 
-$pesanan = [];
-$total = 0;
+echo "================================\n";
+echo "       PEMBELIAN MAKANAN\n";
+echo "          $nama_toko\n";
+echo "================================\n\n";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    foreach ($menu as $id => $produk) {
-        $jumlah = (int) ($_POST["jumlah"][$id] ?? 0);
+echo "DAFTAR MENU MAKANAN:\n";
 
-        if ($jumlah > 0) {
-            $subtotal = $produk["harga"] * $jumlah;
-
-            $pesanan[] = [
-                "nama" => $produk["nama"],
-                "jumlah" => $jumlah,
-                "subtotal" => $subtotal
-            ];
-
-            $total += $subtotal;
-        }
-    }
+foreach ($harga_menu as $nama => $harga) {
+    echo $nama . " = Rp" .
+         number_format($harga, 0, ',', '.') . "\n";
 }
+
+echo "\n================================\n";
+
+$pilihan = "Burger";
+$jumlah = 2;
+$uang_bayar = 40000;
+
+if (isset($harga_menu[$pilihan]) && $jumlah > 0) {
+
+    $harga = $harga_menu[$pilihan];
+    $total = $harga * $jumlah;
+
+    echo "Nama makanan : " . $pilihan . "\n";
+    echo "Harga satuan : Rp" .
+         number_format($harga, 0, ',', '.') . "\n";
+    echo "Jumlah beli  : " . $jumlah . "\n";
+    echo "Total harga  : Rp" .
+         number_format($total, 0, ',', '.') . "\n";
+    echo "Uang bayar   : Rp" .
+         number_format($uang_bayar, 0, ',', '.') . "\n";
+
+    if ($uang_bayar >= $total) {
+
+        $kembalian = $uang_bayar - $total;
+
+        echo "Kembalian    : Rp" .
+             number_format($kembalian, 0, ',', '.') . "\n";
+        echo "\nPembelian berhasil!\n";
+
+    } else {
+
+        $kurang = $total - $uang_bayar;
+
+        echo "Uang kurang  : Rp" .
+             number_format($kurang, 0, ',', '.') . "\n";
+    }
+
+} else {
+
+    echo "Pilihan menu tidak tersedia!\n";
+}
+
+echo "================================\n";
+echo "Terima kasih sudah berbelanja!\n";
+
 ?>
-
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaiA Food - Toko Online Makanan</title>
-</head>
-<body>
-
-<h1>MaiA Food</h1>
-<p>Selamat datang di toko online makanan kami!</p>
-
-<h2>Daftar Menu</h2>
-
-<form method="POST">
-    <?php foreach ($menu as $id => $produk): ?>
-        <p>
-            <?= htmlspecialchars($produk["nama"]) ?> -
-            Rp<?= number_format($produk["harga"], 0, ',', '.') ?>
-
-            <br>
-            Jumlah:
-            <input
-                type="number"
-                name="jumlah[<?= $id ?>]"
-                value="0"
-                min="0"
-            >
-        </p>
-    <?php endforeach; ?>
-
-    <button type="submit">Hitung Pesanan</button>
-</form>
-
-<?php if ($_SERVER["REQUEST_METHOD"] == "POST"): ?>
-    <h2>Rincian Pesanan</h2>
-
-    <?php if (empty($pesanan)): ?>
-        <p>Kamu belum memilih makanan.</p>
-    <?php else: ?>
-        <?php foreach ($pesanan as $item): ?>
-            <p>
-                <?= htmlspecialchars($item["nama"]) ?>
-                (<?= $item["jumlah"] ?>)
-                = Rp<?= number_format($item["subtotal"], 0, ',', '.') ?>
-            </p>
-        <?php endforeach; ?>
-
-        <h3>
-            Total: Rp<?= number_format($total, 0, ',', '.') ?>
-        </h3>
-    <?php endif; ?>
-<?php endif; ?>
-
-</body>
-</html>
