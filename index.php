@@ -1,69 +1,126 @@
 <?php
-
 $nama_toko = "MaiA Food";
 
-$harga_menu = [
-    "Burger" => 15000,
-    "Pizza" => 25000,
-    "Kentang Goreng" => 10000,
-    "Donat" => 8000,
-    "Es Teh" => 5000
+$menu = [
+    1 => ["nama" => "Burger", "harga" => 15000],
+    2 => ["nama" => "Pizza", "harga" => 25000],
+    3 => ["nama" => "Kentang Goreng", "harga" => 10000],
+    4 => ["nama" => "Donat", "harga" => 8000],
+    5 => ["nama" => "Es Teh", "harga" => 5000]
 ];
 
-echo "================================\n";
-echo "       PEMBELIAN MAKANAN\n";
-echo "          $nama_toko\n";
-echo "================================\n\n";
+$pilihan = "";
+$jumlah = 0;
+$uang_bayar = 0;
+$total = 0;
+$pesan = "";
 
-echo "DAFTAR MENU MAKANAN:\n";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $pilihan = (int) ($_POST["pilihan"] ?? 0);
+    $jumlah = (int) ($_POST["jumlah"] ?? 0);
+    $uang_bayar = (int) ($_POST["uang_bayar"] ?? 0);
 
-foreach ($harga_menu as $nama => $harga) {
-    echo $nama . " = Rp" .
-         number_format($harga, 0, ',', '.') . "\n";
-}
-
-echo "\n================================\n";
-
-$pilihan = "Burger";
-$jumlah = 2;
-$uang_bayar = 40000;
-
-if (isset($harga_menu[$pilihan]) && $jumlah > 0) {
-
-    $harga = $harga_menu[$pilihan];
-    $total = $harga * $jumlah;
-
-    echo "Nama makanan : " . $pilihan . "\n";
-    echo "Harga satuan : Rp" .
-         number_format($harga, 0, ',', '.') . "\n";
-    echo "Jumlah beli  : " . $jumlah . "\n";
-    echo "Total harga  : Rp" .
-         number_format($total, 0, ',', '.') . "\n";
-    echo "Uang bayar   : Rp" .
-         number_format($uang_bayar, 0, ',', '.') . "\n";
-
-    if ($uang_bayar >= $total) {
-
-        $kembalian = $uang_bayar - $total;
-
-        echo "Kembalian    : Rp" .
-             number_format($kembalian, 0, ',', '.') . "\n";
-        echo "\nPembelian berhasil!\n";
-
+    if (!isset($menu[$pilihan])) {
+        $pesan = "Pilihan makanan tidak tersedia!";
+    } elseif ($jumlah < 1 || $uang_bayar < 0) {
+        $pesan = "Jumlah atau uang pembayaran tidak valid!";
     } else {
-
-        $kurang = $total - $uang_bayar;
-
-        echo "Uang kurang  : Rp" .
-             number_format($kurang, 0, ',', '.') . "\n";
+        $total = $menu[$pilihan]["harga"] * $jumlah;
     }
-
-} else {
-
-    echo "Pilihan menu tidak tersedia!\n";
 }
 
-echo "================================\n";
-echo "Terima kasih sudah berbelanja!\n";
-
+function rupiah($angka) {
+    return "Rp" . number_format($angka, 0, ',', '.');
+}
 ?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaiA Food</title>
+</head>
+<body>
+
+<h1><?php echo $nama_toko; ?></h1>
+<p>Aplikasi Pembelian Makanan Online</p>
+<hr>
+
+<h2>Daftar Menu Makanan</h2>
+
+<?php foreach ($menu as $id => $item) { ?>
+    <p>
+        <?php echo $id . ". " . $item["nama"]; ?>
+        - <?php echo rupiah($item["harga"]); ?>
+    </p>
+<?php } ?>
+
+<hr>
+
+<h2>Form Pembelian</h2>
+
+<form method="POST" action="">
+    <label>Pilih makanan:</label>
+    <select name="pilihan" required>
+        <?php foreach ($menu as $id => $item) { ?>
+            <option value="<?php echo $id; ?>"
+                <?php echo ($pilihan == $id) ? "selected" : ""; ?>>
+                <?php echo $item["nama"]; ?>
+            </option>
+        <?php } ?>
+    </select>
+
+    <br><br>
+
+    <label>Jumlah pembelian:</label>
+    <input type="number" name="jumlah"
+        min="1" value="<?php echo $jumlah > 0 ? $jumlah : 1; ?>"
+        required>
+
+    <br><br>
+
+    <label>Uang pembayaran (Rp):</label>
+    <input type="number" name="uang_bayar"
+        min="0" value="<?php echo $uang_bayar; ?>"
+        required>
+
+    <br><br>
+
+    <button type="submit">Hitung Pembayaran</button>
+</form>
+
+<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
+    <hr>
+    <h2>Hasil Pembelian</h2>
+
+    <?php if ($pesan != "") { ?>
+        <p><?php echo $pesan; ?></p>
+    <?php } else { ?>
+        <p>Nama makanan:
+            <?php echo $menu[$pilihan]["nama"]; ?></p>
+
+        <p>Harga satuan:
+            <?php echo rupiah($menu[$pilihan]["harga"]); ?></p>
+
+        <p>Jumlah beli: <?php echo $jumlah; ?></p>
+
+        <p>Total harga: <?php echo rupiah($total); ?></p>
+
+        <p>Uang bayar: <?php echo rupiah($uang_bayar); ?></p>
+
+        <?php if ($uang_bayar >= $total) { ?>
+            <p>Kembalian:
+                <?php echo rupiah($uang_bayar - $total); ?></p>
+            <p>Pembelian berhasil!</p>
+        <?php } else { ?>
+            <p>Uang masih kurang:
+                <?php echo rupiah($total - $uang_bayar); ?></p>
+        <?php } ?>
+    <?php } ?>
+<?php } ?>
+
+<hr>
+<p>Terima kasih sudah berbelanja di MaiA Food!</p>
+
+</body>
+</html>
