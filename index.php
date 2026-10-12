@@ -1,126 +1,255 @@
-<?php
-$nama_toko = "MaiA Food";
-
-$menu = [
-    1 => ["nama" => "Burger", "harga" => 15000],
-    2 => ["nama" => "Pizza", "harga" => 25000],
-    3 => ["nama" => "Kentang Goreng", "harga" => 10000],
-    4 => ["nama" => "Donat", "harga" => 8000],
-    5 => ["nama" => "Es Teh", "harga" => 5000]
-];
-
-$pilihan = "";
-$jumlah = 0;
-$uang_bayar = 0;
-$total = 0;
-$pesan = "";
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $pilihan = (int) ($_POST["pilihan"] ?? 0);
-    $jumlah = (int) ($_POST["jumlah"] ?? 0);
-    $uang_bayar = (int) ($_POST["uang_bayar"] ?? 0);
-
-    if (!isset($menu[$pilihan])) {
-        $pesan = "Pilihan makanan tidak tersedia!";
-    } elseif ($jumlah < 1 || $uang_bayar < 0) {
-        $pesan = "Jumlah atau uang pembayaran tidak valid!";
-    } else {
-        $total = $menu[$pilihan]["harga"] * $jumlah;
-    }
-}
-
-function rupiah($angka) {
-    return "Rp" . number_format($angka, 0, ',', '.');
-}
-?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MaiA Food</title>
+    <title>Kalkulator Pintar</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .kalkulator {
+            width: 100%;
+            max-width: 350px;
+            background: #ffffff;
+            padding: 22px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px #00000030;
+        }
+
+        h2 {
+            text-align: center;
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+
+        .layar {
+            background: #f1f0f7;
+            border-radius: 15px;
+            padding: 20px 12px;
+            margin-bottom: 15px;
+            text-align: right;
+            overflow: hidden;
+        }
+
+        #riwayat {
+            color: #777;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        #hasil {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            text-align: right;
+            font-size: 32px;
+            color: #333;
+        }
+
+        .tombol {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 17px 0;
+            font-size: 20px;
+            font-weight: bold;
+            background: #f1f0f7;
+            color: #333;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background: #e6dcff;
+            color: #764ba2;
+        }
+
+        .hapus {
+            background: #ffdddd;
+            color: #d63031;
+        }
+
+        .sama {
+            background: #764ba2;
+            color: white;
+        }
+
+        .nol {
+            grid-column: span 2;
+        }
+
+        .keterangan {
+            text-align: center;
+            color: #777;
+            font-size: 12px;
+            margin-top: 18px;
+        }
+    </style>
 </head>
+
 <body>
 
-<h1><?php echo $nama_toko; ?></h1>
-<p>Aplikasi Pembelian Makanan Online</p>
-<hr>
+    <div class="kalkulator">
+        <h2>🧮 Kalkulator Pintar</h2>
 
-<h2>Daftar Menu Makanan</h2>
+        <div class="layar">
+            <div id="riwayat">Siap menghitung</div>
+            <input type="text" id="hasil"
+                value="0" readonly>
+        </div>
 
-<?php foreach ($menu as $id => $item) { ?>
-    <p>
-        <?php echo $id . ". " . $item["nama"]; ?>
-        - <?php echo rupiah($item["harga"]); ?>
-    </p>
-<?php } ?>
+        <div class="tombol">
+            <button class="hapus" onclick="reset()">AC</button>
+            <button class="hapus" onclick="hapusSatu()">DEL</button>
+            <button class="operator" onclick="masuk('%')">%</button>
+            <button class="operator" onclick="masuk('/')">÷</button>
 
-<hr>
+            <button onclick="masuk('7')">7</button>
+            <button onclick="masuk('8')">8</button>
+            <button onclick="masuk('9')">9</button>
+            <button class="operator" onclick="masuk('*')">×</button>
 
-<h2>Form Pembelian</h2>
+            <button onclick="masuk('4')">4</button>
+            <button onclick="masuk('5')">5</button>
+            <button onclick="masuk('6')">6</button>
+            <button class="operator" onclick="masuk('-')">−</button>
 
-<form method="POST" action="">
-    <label>Pilih makanan:</label>
-    <select name="pilihan" required>
-        <?php foreach ($menu as $id => $item) { ?>
-            <option value="<?php echo $id; ?>"
-                <?php echo ($pilihan == $id) ? "selected" : ""; ?>>
-                <?php echo $item["nama"]; ?>
-            </option>
-        <?php } ?>
-    </select>
+            <button onclick="masuk('1')">1</button>
+            <button onclick="masuk('2')">2</button>
+            <button onclick="masuk('3')">3</button>
+            <button class="operator" onclick="masuk('+')">+</button>
 
-    <br><br>
+            <button class="nol" onclick="masuk('0')">0</button>
+            <button onclick="masuk('.')">.</button>
+            <button class="sama" onclick="hitung()">=</button>
+        </div>
 
-    <label>Jumlah pembelian:</label>
-    <input type="number" name="jumlah"
-        min="1" value="<?php echo $jumlah > 0 ? $jumlah : 1; ?>"
-        required>
+        <p class="keterangan">
+            Kalkulator Pintar • Mudah dan Praktis
+        </p>
+    </div>
 
-    <br><br>
+    <script>
+        let ekspresi = "";
+        let selesai = false;
 
-    <label>Uang pembayaran (Rp):</label>
-    <input type="number" name="uang_bayar"
-        min="0" value="<?php echo $uang_bayar; ?>"
-        required>
+        function tampilkan() {
+            document.getElementById("hasil").value =
+                ekspresi || "0";
+        }
 
-    <br><br>
+        function masuk(nilai) {
+            const operator = ["+", "-", "*", "/", "%"];
 
-    <button type="submit">Hitung Pembayaran</button>
-</form>
+            if (selesai) {
+                if (operator.includes(nilai)) {
+                    selesai = false;
+                } else {
+                    ekspresi = "";
+                    selesai = false;
+                }
+            }
 
-<?php if ($_SERVER["REQUEST_METHOD"] == "POST") { ?>
-    <hr>
-    <h2>Hasil Pembelian</h2>
+            if (operator.includes(nilai)) {
+                if (ekspresi === "" && nilai !== "-") return;
 
-    <?php if ($pesan != "") { ?>
-        <p><?php echo $pesan; ?></p>
-    <?php } else { ?>
-        <p>Nama makanan:
-            <?php echo $menu[$pilihan]["nama"]; ?></p>
+                if (operator.includes(ekspresi.slice(-1))) {
+                    ekspresi = ekspresi.slice(0, -1);
+                }
+            }
 
-        <p>Harga satuan:
-            <?php echo rupiah($menu[$pilihan]["harga"]); ?></p>
+            if (nilai === ".") {
+                const bagian = ekspresi.split(/[+\-*/%]/).pop();
+                if (bagian.includes(".")) return;
+            }
 
-        <p>Jumlah beli: <?php echo $jumlah; ?></p>
+            ekspresi += nilai;
+            tampilkan();
+        }
 
-        <p>Total harga: <?php echo rupiah($total); ?></p>
+        function hitung() {
+            if (!ekspresi) return;
 
-        <p>Uang bayar: <?php echo rupiah($uang_bayar); ?></p>
+            try {
+                if (!/^[0-9+\-*/%.() ]+$/.test(ekspresi)) {
+                    throw new Error("Ekspresi tidak valid");
+                }
 
-        <?php if ($uang_bayar >= $total) { ?>
-            <p>Kembalian:
-                <?php echo rupiah($uang_bayar - $total); ?></p>
-            <p>Pembelian berhasil!</p>
-        <?php } else { ?>
-            <p>Uang masih kurang:
-                <?php echo rupiah($total - $uang_bayar); ?></p>
-        <?php } ?>
-    <?php } ?>
-<?php } ?>
+                if (/[+\-*/%.]$/.test(ekspresi)) {
+                    throw new Error("Ekspresi tidak lengkap");
+                }
 
-<hr>
-<p>Terima kasih sudah berbelanja di MaiA Food!</p>
+                const rumus = ekspresi;
+                const hasilHitung = Function(
+                    '"use strict"; return (' + rumus + ')'
+                )();
+
+                if (!Number.isFinite(hasilHitung)) {
+                    throw new Error("Hasil tidak valid");
+                }
+
+                document.getElementById("riwayat").textContent =
+                    rumus.replace(/\*/g, "×")
+                         .replace(/\//g, "÷") + " =";
+
+                ekspresi = String(
+                    Number(hasilHitung.toPrecision(12))
+                );
+
+                tampilkan();
+                selesai = true;
+
+            } catch (error) {
+                document.getElementById("riwayat").textContent =
+                    "Perhitungan tidak valid";
+                ekspresi = "";
+                tampilkan();
+                selesai = false;
+            }
+        }
+
+        function reset() {
+            ekspresi = "";
+            selesai = false;
+            document.getElementById("riwayat").textContent =
+                "Siap menghitung";
+            tampilkan();
+        }
+
+        function hapusSatu() {
+            if (selesai) {
+                reset();
+                return;
+            }
+
+            ekspresi = ekspresi.slice(0, -1);
+            tampilkan();
+        }
+    </script>
 
 </body>
 </html>
